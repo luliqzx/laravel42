@@ -13,6 +13,7 @@
 
 Route::get('/', function()
 {
+	return Redirect::to('cats');
 	return View::make('hello');
 });
 
@@ -111,3 +112,9 @@ View::composer('cats.edit', function($view)
 	}
 	$view->with('breed_options', $breed_options);
 });
+
+Route::get('login', function(){  return View::make('login'); }); 
+
+Route::post('login', function(){  if(Auth::attempt(Input::only('username', 'password'))) {    return Redirect::intended('/');  } else {  return Redirect::back()    ->withInput()    ->with('error', "Invalid credentials");  } });
+
+Route::get('logout', function(){  Auth::logout();  return Redirect::to('/')    ->with('message', 'You are now logged out'); }); 
