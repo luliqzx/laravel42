@@ -66,40 +66,55 @@ Route::get('cats/detail/{cat}', function(Cat $cat) {
 	->with('cat', $cat);
 });
 
-Route::get('cats/create', function() {
-	$cat = new Cat;
-	return View::make('cats.edit')
-	->with('cat', $cat)
-	->with('method', 'post');
-});
+//Route::group(array('before'=>'auth'), function(){
 
-Route::get('cats/{cat}/edit', function(Cat $cat) {
-	return View::make('cats.edit')
-	->with('cat', $cat)
-	->with('method', 'put');
-});
-Route::get('cats/{cat}/delete', function(Cat $cat) {
-	return View::make('cats.edit')
-	->with('cat', $cat)
-	->with('method', 'delete');
-});
+	Route::get('cats/create', function() {
+		$cat = new Cat;
+		return View::make('cats.edit')
+		->with('cat', $cat)
+		->with('method', 'post');
+	});
 
-Route::post('cats', function(){
-	$cat = Cat::create(Input::all());
-	return Redirect::to('cats/detail/' . $cat->id)
-	->with('message', 'Successfully created page!');
-});
+	Route::get('cats/{cat}/edit', function(Cat $cat) {
+		return View::make('cats.edit')
+		->with('cat', $cat)
+		->with('method', 'put');
+	});
+	Route::get('cats/{cat}/delete', function(Cat $cat) {
+		return View::make('cats.edit')
+		->with('cat', $cat)
+		->with('method', 'delete');
+	});
 
-Route::put('cats/{cat}', function(Cat $cat) {
-	$cat->update(Input::all());
-	return Redirect::to('cats/detail/' . $cat->id)
-	->with('message', 'Successfully updated page!');
-});
-Route::delete('cats/{cat}', function(Cat $cat) {
-	$cat->delete();
-	return Redirect::to('cats')
-	->with('message', 'Successfully deleted page!');
-});
+	Route::post('cats', function(){
+		$cat = Cat::create(Input::all());
+		$cat->user_id = Auth::user()->id;
+		if($cat->save()){
+			return Redirect::to('cats/detail/' . $cat->id)
+			->with('message', 'Successfully created page!');
+		}
+		else {
+			return Redirect::back()
+			->with('error', 'Could not create profile');
+		}
+	});
+
+	Route::put('cats/{cat}', function(Cat $cat) {
+		if(Auth::user()->canEdit($cat)){
+			$cat->update(Input::all());
+			return Redirect::to('cats/detail/' . $cat->id)
+			->with('message', 'Successfully updated page!');
+		} else {
+			return Redirect::to('cats/' . $cat->id)
+			->with('error', "Unauthorized operation");
+		}
+	});
+	Route::delete('cats/{cat}', function(Cat $cat) {
+		$cat->delete();
+		return Redirect::to('cats')
+		->with('message', 'Successfully deleted page!');
+	});
+//});
 
 View::composer('cats.edit', function($view)
 {
